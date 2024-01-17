@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Travelling Salesman Problem</title>
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Georgia', sans-serif;
+  background: #f0f0f0;
+}
+.container {
+  max-width: 1200px;
+  margin: 20px auto;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+header {
+  background: #004d7a; 
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+  border-bottom: 4px solid #ffc107; 
+}
+.map {
+  background: url('map-placeholder.png') no-repeat center center;
+  background-size: cover;
+  height: 300px; 
+  border-bottom: 2px solid #ddd;
+}
+.trip-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #f8f8f8;
+}
+.trip-info {
+  display: flex;
+  flex-direction: column;
+}
+.time, .distance, .eta {
+  margin-bottom: 10px;
+  background: #e7e7e7;
+  border-radius: 5px;
+  padding: 10px;
+  width: 200px;
+}
+.start-trip-btn {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 15px 30px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+.start-trip-btn:hover {
+  background: #218838;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>The Travelling Salesman Problem</h1>
+    <p>Plan your market route efficiently and with ease.</p>
+  </header>
+  <div class="map"></div>
+  <section class="trip-controls">
+    <div class="trip-info">
+      <div class="time">
+        <strong>Start Time:</strong>
+        <input type="text" id="startTime" name="startTime" value="08:03 AM">
+      </div>
+      
+      <div class="distance">
+        <strong>Total Distance:</strong> 25 mi
+      </div>
+      <div class="eta">
+        <strong>Estimated Time:</strong> 1 hr 20 mins
+      </div>
+    </div>
+    <button class="start-trip-btn">Start Trip</button>
+  </section>
+</div>
+<script>
+document.querySelector('.start-trip-btn').addEventListener('click', function() {
+  
+  alert('Your trip has been started. Safe travels!');
+  
+});
+</script>
+</body>
+</html>
