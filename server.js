@@ -1,6 +1,4 @@
-const http = require('node:http');
 const express = require('express');
-const fs = require('fs')
 const axios = require('axios');
 
 const hostname = '127.0.0.1';
