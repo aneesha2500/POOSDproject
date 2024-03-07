@@ -26,15 +26,17 @@ DATA SENT TO FRONTEND IN FOLLOWING FORMAT:
 	stopOrder: bestRoute.routes[0].waypoint_order, //array of indicies of stops in order
 	distances: distances, //array of distances between stops (index 0 for src to stop at index 0, index 1 for stop at index 0 to index 1, etc.)
 	arrivalTimes: arrivalTimes //array of arrival times in clock format (index 0 for arrival at stop at index 0, index 1 for arrival at stop at index 1, etc.)
+	status: "" //status of the request described below
 
-ERRORS MESSAGES TO FRONTEND:
-	"error - startTime is not a number" - startTime is not a number
-	"error with source" - incorrect source address 
-	"error with dest" - incorrect destination address 
-	"error with route" - error with the route itself - most likely impossible to travel between certain addresses
-	"error with stop at index i" - index i has an invalid address
-	"error - times not defined for all stops" - not exactly one time per stop
-	"error - time at index i is not a valid number" - time for stop at index i is not a number
+STATUS MESSAGES TO FRONTEND:
+	status: "OK" - no errors and all fields are valid and filled
+	status: "invalid startTime" - startTime is not a number
+	status: "invalid source address" - incorrect source address 
+	status: "invalid destination address"
+	status: "invalid route" - error with the route itself - most likely impossible to travel between certain addresses
+	status: ("invalid address at stop index " + i) - index i has an invalid address
+	status: "times and stops have unequal length" - not exactly one time per stop
+	status: ("time at index " + i + " is invalid") - time for stop at index i is not a number
 */
 
 app.use(express.json());
@@ -90,7 +92,7 @@ app.post('/trip', async (req, res) => {
 	if (isNaN(startTime)) {
 		//ERROR
 		console.log("error - startTime is not a number");
-		res.send("error - startTime is not a number");
+		res.send(JSON.stringify({status: "invalid startTime"}));
 		return;
 	}
 
@@ -101,7 +103,7 @@ app.post('/trip', async (req, res) => {
 	if (stops.length != times.length) {
 		//ERROR
 		console.log("error - times not defined for all stops");
-		res.send("error - times not defined for all stops");
+		res.send(JSON.stringify({status: "times and stops have unequal length"}));
 		return;
 	}
 
@@ -111,7 +113,7 @@ app.post('/trip', async (req, res) => {
 		if (isNaN(times[i]) || times[i] < 0) {
 			//ERROR
 			console.log("error - time at index " + i + " is not a valid number");
-			res.send("error - time at index " + i + " is not a valid number");
+			res.send(JSON.stringify({status: ("time at index " + i + " is invalid")}));
 			return;
 		}
 	}
@@ -123,25 +125,25 @@ app.post('/trip', async (req, res) => {
 	if (data === "s") {
 		//error with source
 		console.log("error with source")
-		res.send("error with source");
+		res.send(JSON.stringify({status: "invalid source address"}));
 		return;
 	}
 	else if (data === "d") {
 		//error with dest
 		console.log("error with dest")
-		res.send("error with dest");
+		res.send(JSON.stringify({status: "invalid destination address"}));
 		return;
 	}
-	else if (data == "r") {
+	else if (data === "r") {
 		//error with route
 		console.log("error with route");
-		res.send("error with route");
+		res.send(JSON.stringify({status: "invalid route"}));
 		return;
 	}
 	else if (typeof(data) == 'number') {
-		//error with stop at index errorCode - 1
+		//error with stop at index data - 1
 		console.log("error with stop at index " + (data - 1));
-		res.send("error with stop at index " + (data - 1));
+		res.send(JSON.stringify({status: ("invalid address at stop index " + (data - 1))}));
 		return;
 	}
 
@@ -226,7 +228,8 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 	let data = {
 		stopOrder: bestRoute.routes[0].waypoint_order,
 		distances: distances,
-		arrivalTimes: arrivalTimes
+		arrivalTimes: arrivalTimes,
+		status: "OK"
 	}
 	
 	//data object is returned in JSON format
