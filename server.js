@@ -7,10 +7,12 @@ const port = 80;
 const app = express();
 
 /*
-RUN SERVER
+MAKE SURE NODE, EXPRESS, and AXIOS ARE INSTALLED IN YOUR DIRECTORY
+
+RUN SERVER IN TERMINAL
 node projectTest.js
 
-TEST POST REQUEST
+TEST POST REQUEST IN SEPARATE TERMINAL WHILE SERVER IS RUNNING
 curl -d '{"src":"2811 Einstein Way, Orlando, FL","dest":"4000 Central Florida Blvd, Orlando, FL","stops":["Miami, FL","Tampa, FL","Gainesville, FL"],"times":[3600,7200,10800],"startTime":8400}' -H "Content-Type: application/json" http://127.0.0.1:80/trip
 
 FRONTEND SENDS TO BACKEND IN FOLLOWING FORMAT: 
@@ -26,17 +28,16 @@ DATA SENT TO FRONTEND IN FOLLOWING FORMAT:
 	arrivalTimes: arrivalTimes //array of arrival times in seconds into the day (index 0 for arrival at stop at index 0, index 1 for arrival at stop at index 1, etc.)
 
 ERRORS MESSAGES TO FRONTEND:
+	"error - startTime is not a number" - startTime is not a number
 	"error with source" - incorrect source address 
 	"error with dest" - incorrect destination address 
+	"error with route" - error with the route itself - most likely impossible to travel between certain addresses
 	"error with stop at index i" - index i has an invalid address
 	"error - times not defined for all stops" - not exactly one time per stop
-
-TODO LIST
-	- validate data types from frontend
-	- validate that places can actually be travelled between (i.e. not on different islands)
+	"error - time at index i is not a valid number" - time for stop at index i is not a number
 */
 
-app.use(express.json());  
+app.use(express.json());
 
 //puts data into imperial units
 function metersToMiles(meters) {
@@ -46,21 +47,43 @@ function metersToMiles(meters) {
 //responds to post request
 app.post('/trip', async (req, res) => {  
 
-	console.log("received");
+	console.log("received" + req.body);
 
 	//NEED TO ADD DATA PARSER FROM FRONTEND REQUEST AND VALIDATE DATA TYPES
 	let src = req.body.src; //source address
 	let dest = req.body.dest; //destination address
 	let stops = req.body.stops; //array of stop addresses
 	let times = req.body.times; //array of times at each stop in seconds
-	let startTime = req.body.startTime; //start time seconds into the day
+	let startTime = parseFloat(req.body.startTime); //start time seconds into the day
+
+	//validates startTime
+	if (isNaN(startTime)) {
+		//ERROR
+		console.log("error - startTime is not a number");
+		res.send("error - startTime is not a number");
+		return;
+	}
+
+	//adjusts startTime to be within 24 hours
+	startTime = startTime % 86400;
 
 	//if there is not exactly one time per stop, error
 	if (stops.length != times.length) {
-		//error - times not defined for all stops
+		//ERROR
 		console.log("error - times not defined for all stops");
 		res.send("error - times not defined for all stops");
 		return;
+	}
+
+	//turns all times from strings into numbers, and confirms they are valid
+	for (let i = 0; i < times.length; i++) {
+		times[i] = parseFloat(times[i]);
+		if (isNaN(times[i]) || times[i] < 0) {
+			//ERROR
+			console.log("error - time at index " + i + " is not a valid number");
+			res.send("error - time at index " + i + " is not a valid number");
+			return;
+		}
 	}
 
 	//process data
@@ -77,6 +100,12 @@ app.post('/trip', async (req, res) => {
 		//error with dest
 		console.log("error with dest")
 		res.send("error with dest");
+		return;
+	}
+	else if (data == "r") {
+		//error with route
+		console.log("error with route");
+		res.send("error with route");
 		return;
 	}
 	else if (typeof(data) == 'number') {
@@ -133,9 +162,14 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 	//get best route
 	let bestRoute = await getBestRoute(src, dest, stops);
 
-	//initializing arrays for travel times and durations 
+	//initializing arrays for travel times and distances
 	let arrivalTimes = [];
 	let distances = [];
+
+	if (bestRoute.status != "OK") {
+		//ERROR
+		return "r";
+	}
 
 	//populate arrays with each leg of the route
 	for (let i = 0; i < bestRoute.routes[0].legs.length; i++) {
