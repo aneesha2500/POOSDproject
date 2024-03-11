@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors');
 
 const hostname = '127.0.0.1';
 const apiKey = "AIzaSyAOHxhGH00oZb9tOht2cmZiYUU-ZB-RXRw";
@@ -7,7 +8,7 @@ const port = 80;
 const app = express();
 
 /*
-MAKE SURE NODE, EXPRESS, and AXIOS ARE INSTALLED IN YOUR DIRECTORY
+MAKE SURE NODE, EXPRESS, AXIOS, AND CORS ARE INSTALLED IN YOUR DIRECTORY
 
 RUN SERVER IN TERMINAL
 node projectTest.js
@@ -40,6 +41,7 @@ STATUS MESSAGES TO FRONTEND:
 */
 
 app.use(express.json());
+app.use(cors());
 
 //puts data into imperial units
 function metersToMiles(meters) {
@@ -48,7 +50,6 @@ function metersToMiles(meters) {
 
 //converts seconds into clock format
 function secondsToClock(seconds) {
-	console.log("Starting secondsToClock with " + seconds);//REMOVE
 	let AmPm = "AM";
 	let hours = Math.floor(seconds / 3600);
 	seconds = seconds % 3600;
