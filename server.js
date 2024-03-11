@@ -31,13 +31,13 @@ DATA SENT TO FRONTEND IN FOLLOWING FORMAT:
 
 STATUS MESSAGES TO FRONTEND:
 	status: "OK" - no errors and all fields are valid and filled
-	status: "invalid startTime" - startTime is not a number
+	status: "invalid start time" - startTime is not a number
 	status: "invalid source address" - incorrect source address 
 	status: "invalid destination address"
 	status: "invalid route" - error with the route itself - most likely impossible to travel between certain addresses
-	status: ("invalid address at stop index " + i) - index i has an invalid address
+	status: ("invalid address for stop " + data) - index i - 1 has an invalid address
 	status: "times and stops have unequal length" - not exactly one time per stop
-	status: ("time at index " + i + " is invalid") - time for stop at index i is not a number
+	status: ("time for stop " + i + " is not a valid number") - time for stop at index i - 1 is not a valid number
 */
 
 app.use(express.json());
@@ -76,7 +76,6 @@ app.post('/trip', async (req, res) => {
 
 	console.log("received" + req.body);
 
-	//NEED TO ADD DATA PARSER FROM FRONTEND REQUEST AND VALIDATE DATA TYPES
 	let src = req.body.src; //source address
 	let dest = req.body.dest; //destination address
 	let stops = req.body.stops; //array of stop addresses
@@ -92,8 +91,8 @@ app.post('/trip', async (req, res) => {
 	//validates startTime
 	if (isNaN(startTime)) {
 		//ERROR
-		console.log("error - startTime is not a number");
-		res.send(JSON.stringify({status: "invalid startTime"}));
+		console.log("error - invalid start time");
+		res.send(JSON.stringify({status: "invalid start time"}));
 		return;
 	}
 
@@ -113,8 +112,8 @@ app.post('/trip', async (req, res) => {
 		times[i] = parseFloat(times[i]);
 		if (isNaN(times[i]) || times[i] < 0) {
 			//ERROR
-			console.log("error - time at index " + i + " is not a valid number");
-			res.send(JSON.stringify({status: ("time at index " + i + " is invalid")}));
+			console.log("error - time for stop " + (i + 1) + " is not a valid number");
+			res.send(JSON.stringify({status: ("time for stop " + (i + 1) + " is not a valid number")}));
 			return;
 		}
 	}
@@ -143,8 +142,8 @@ app.post('/trip', async (req, res) => {
 	}
 	else if (typeof(data) == 'number') {
 		//error with stop at index data - 1
-		console.log("error with stop at index " + (data - 1));
-		res.send(JSON.stringify({status: ("invalid address at stop index " + (data - 1))}));
+		console.log("error with stop " + data);
+		res.send(JSON.stringify({status: ("invalid address for stop " + data)}));
 		return;
 	}
 
@@ -240,6 +239,10 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 //validates all addresses, and turns them into correct format
 async function validateAddresses(source, destination, stops) {
 	//validates source address
+	if (source == "" || source === undefined) {
+		//ERROR
+		return "s";
+	}
 	let sourceCall = await validateAddress(source);
 	if (sourceCall.status != 'OK') {
 		//ERROR
@@ -248,6 +251,10 @@ async function validateAddresses(source, destination, stops) {
 	source = sourceCall.results[0].formatted_address
 
 	//validates destination address
+	if (destination == "" || destination === undefined) {
+		//ERROR
+		return "d";
+	}
 	let destinationCall = await validateAddress(destination);
 	if (destinationCall.status != 'OK') {
 		//ERROR
@@ -257,6 +264,10 @@ async function validateAddresses(source, destination, stops) {
 
 	//validates stop addresses
 	for (let i = 0; i < stops.length; i++) {
+		if (stops[i] == "" || stops[i] === undefined) {
+			//ERROR
+			return i + 1;
+		}
 		let stopCall = await validateAddress(stops[i]);
 		if (stopCall.status != 'OK') {
 			//ERROR
