@@ -11,7 +11,7 @@ document.getElementById('submitTrip').addEventListener('click', async function()
     for (let i = 1; i <= numStops; i++) {
         console.log("processing stop " + i);
         stops[i - 1] = document.getElementById('stop' + i).value;
-        //times[i] = document.getElementById('timeAtStop' + i).value * 60;
+        //times[i - 1] = document.getElementById('timeAtStop' + i).value * 60;
     }
     console.log(stops);
 
