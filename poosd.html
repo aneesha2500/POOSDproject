@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Traveling Salesman Problem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image: url('road.gif');
+      background-size: cover;
+    }
+
+    .container {
+      width: 80%;
+      max-width: 600px;
+      margin: 20px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      padding: 20px;
+      overflow-y: auto; 
+      max-height: 90vh; 
+    }
+
+    header {
+      color: #004d7a;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    input, button {
+      display: block;
+      width: calc(100% - 20px);
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .location-input, .time-input {
+      background-color: #fffefc;
+      cursor: text;
+    }
+
+    button.add-remove-btn {
+      width: auto;
+      display: inline-block;
+      padding: 5px 15px;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+
+    #stopsContainer {
+      margin-bottom: 20px;
+    }
+
+    .stop-input-group {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>The Traveling Salesman Problem</h1>
+      <p>Plan your route efficiently and with ease.</p>
+    </header>
+    <div class="trip-info">
+      <small>Start time:</small>
+      <input type="time" id="startTime" class="location-input">
+      <input type="text" id="startingLocation" placeholder="Starting Location" class="location-input">
+      <div id="stopsContainer"></div>
+      <input type="text" id="destination" placeholder="Destination" class="location-input">
+      <button class="add-remove-btn" onclick="add()">Add Stop</button>
+      <button class="add-remove-btn" onclick="remove()">Remove Stop</button>
+      <button id="submitTrip">Submit Trip</button>
+    </div>
+  </div>
+
+  <script>
+    let numStops = 0;
+
+    function add() {
+      if (numStops >= 19) {
+        alert('Maximum number of stops reached.');
+        return;
+      }
+
+      numStops++;
+      const stopInputGroup = document.createElement("div");
+      stopInputGroup.classList.add("stop-input-group");
+
+      const element = document.createElement("input");
+      element.setAttribute("type", "text");
+      element.setAttribute("placeholder", "Stop " + numStops);
+      element.setAttribute("id", "stop" + numStops);
+      element.classList.add("location-input", "stop-input");
+      stopInputGroup.appendChild(element);
+
+      const timeInput = document.createElement("input");
+      timeInput.setAttribute("type", "number");
+      timeInput.setAttribute("placeholder", "Time at Stop " + numStops + " (mins)");
+      timeInput.setAttribute("id", "timeAtStop" + numStops);
+      timeInput.classList.add("time-input");
+      stopInputGroup.appendChild(timeInput);
+
+      const container = document.getElementById("stopsContainer");
+      container.appendChild(stopInputGroup);
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function remove() {
+      if (numStops > 0) {
+        const container = document.getElementById("stopsContainer");
+        const lastStopGroup = container.lastChild;
+        container.removeChild(lastStopGroup);
+        numStops--;
+      }
+    }
+
+    document.getElementById('submitTrip').addEventListener('click', async function() {
+      const src = document.getElementById('startingLocation').value;
+      const dest = document.getElementById('destination').value;
+      if (document.getElementById('startTime').value.length != 5) {
+        alert('Please enter a complete start time.');
+        return;
+      }
+      let timeArray = document.getElementById('startTime').value.split(':');
+      let startTime = parseInt(timeArray[0]) * 3600 + parseInt(timeArray[1]) * 60;
+      let stops = [];
+      let times = [];
+
+      for (let i = 1; i <= numStops; i++) {
+        console.log("processing stop " + i);
+        stops[i - 1] = document.getElementById('stop' + i).value;
+        times[i - 1] = document.getElementById('timeAtStop' + i).value * 60;
+      }
+      console.log(stops);
+
+      // Construct the JSON object
+      const tripData = {
+        src: src,
+        dest: dest,
+        stops: stops,
+        times: times,
+        startTime: startTime
+      };
+
+      // Send a POST request to /trip
+      try {
+        const response = await fetch('http://127.0.0.1:80/trip', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(tripData),
+        });
+        const data = await response.json();
+        console.log("Result:", data);
+        if (data.status != "OK") {
+          alert(data.status);
+          return;
+        }
+
+      /* DISPLAY FIELDS FOR USER IN HTML HERE
+      data has fields:
+        data.stopOrder: array of ints representing the order of stops based on their indices in input
+		    data.distances: array of floats representing the distances in each leg of travel (miles)
+		    data.arrivalTimes: array of strings representing the arrival times for each leg of travel
+      */
+
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while submitting your trip details.');
+      }
+    });
+  </script>
+</body>
+</html>
