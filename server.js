@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const fs = require('fs');
 
 const hostname = '127.0.0.1';
 const apiKey = "AIzaSyAOHxhGH00oZb9tOht2cmZiYUU-ZB-RXRw";
@@ -42,6 +43,15 @@ STATUS MESSAGES TO FRONTEND:
 
 app.use(express.json());
 app.use(cors());
+
+app.get('/', (req, res) => {
+	fs.readFile('poosd.html', 'utf8', function(err, data) {
+		if (err) {
+			response.status(500).send('An error occurred: ' + err);
+		}
+		res.send(data);
+	}
+)});
 
 //puts data into imperial units
 function metersToMiles(meters) {
