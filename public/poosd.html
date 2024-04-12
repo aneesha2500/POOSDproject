@@ -79,6 +79,36 @@
     .stop-input-group {
       margin-top: 10px;
     }
+
+    ul li {
+      padding-bottom: 20px;
+      list-style: none;
+      padding-left: 50px;
+      position: relative;
+      color:#004d7a
+    }
+
+    ul li:before {
+      content: "";
+      position: absolute;
+      top: -11px;
+      left: 19px;
+      display: inline-block;
+      height: 30px;
+      width: 13px;
+      background-size: contain;
+      background-image: url("map-pin.png");
+    }
+
+    ul li span:nth-child(even) {
+      float: right;
+      padding-left: 6px; 
+    }
+
+    .indented-span {
+      padding-left: 40px;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -96,6 +126,9 @@
       <button class="add-remove-btn" onclick="add()">Add Stop</button>
       <button class="add-remove-btn" onclick="remove()">Remove Stop</button>
       <button id="submitTrip">Submit Trip</button>
+    </div>
+    <div id="trip-output">
+      <ul id="outputList"></ul>
     </div>
   </div>
 
@@ -191,6 +224,57 @@
 		    data.distances: array of floats representing the distances in each leg of travel (miles)
 		    data.arrivalTimes: array of strings representing the arrival times for each leg of travel
       */
+      
+        // Remove all input elements
+        let tripinfo = document.getElementsByClassName("trip-info");
+        if (tripinfo !== null) {
+          tripinfo[0].remove()
+        } else {
+          console.error("Element not found");
+        }
+
+        // Fill in output list with information
+        let outputList = document.getElementById("outputList");
+        // Start location
+        let li = document.createElement('li');
+        var address = document.createElement("span");
+        address.innerText = "Starting Location: " + src;
+        li.appendChild(address);
+        var eta = document.createElement("span");
+        eta.innerText = " ";
+        li.appendChild(eta);
+        var distance = document.createElement("span");
+        distance.className = "indented-span";
+        distance.innerText = "\nDistance to Next Stop: " + data.distances[0].toFixed(1) + " miles\n";
+        li.appendChild(distance);
+        outputList.appendChild(li);
+
+        // Add in each stop
+        for (i = 0; i < data.stopOrder.length; ++i) {
+            let li = document.createElement('li');
+            var address = document.createElement("span");
+            address.innerText = "Stop " + (i+1) + ": " + stops[data.stopOrder[i]];
+            li.appendChild(address);
+            var eta = document.createElement("span");
+            eta.innerText = " ETA: " + data.arrivalTimes[i];
+            li.appendChild(eta);
+            var distance = document.createElement("span");
+            distance.className = "indented-span";
+            distance.innerText = "\nDistance to Next Stop: " + data.distances[i+1].toFixed(1) + " miles\n";
+            li.appendChild(distance);
+            outputList.appendChild(li);
+        }
+
+        // Final Destination
+        li = document.createElement('li');
+        var address = document.createElement("span");
+        address.innerText = "Destination: " + dest;
+        li.appendChild(address);
+        var eta = document.createElement("span");
+        eta.innerText = " ETA: " + data.arrivalTimes[numStops];
+        li.appendChild(eta);
+        outputList.appendChild(li);
+      
 
       } catch (error) {
         console.error('Error:', error);
