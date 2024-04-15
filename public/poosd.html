@@ -109,6 +109,12 @@
       padding-left: 40px;
       display: inline-block;
     }
+
+    #trip-time {
+      color: #004d7a;
+      margin-bottom: 20px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -129,6 +135,7 @@
     </div>
     <div id="trip-output">
       <ul id="outputList"></ul>
+      <div id="trip-time"></div>
     </div>
   </div>
 
@@ -274,7 +281,13 @@
         eta.innerText = " ETA: " + data.arrivalTimes[numStops];
         li.appendChild(eta);
         outputList.appendChild(li);
-      
+
+        // Total Trip Time
+        tripTime = document.getElementById("trip-time")
+        var totalTime = document.createElement('p');
+        totalTime.innerText = "Total trip time: " + data.totalHours + " hours and " + data.totalMinutes + " minutes";
+        li.appendChild(totalTime);
+        tripTime.appendChild(totalTime);
 
       } catch (error) {
         console.error('Error:', error);
