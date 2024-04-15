@@ -15,9 +15,6 @@ MAKE SURE NODE, EXPRESS, AXIOS, AND CORS ARE INSTALLED IN YOUR DIRECTORY
 RUN SERVER IN TERMINAL
 node projectTest.js
 
-TEST POST REQUEST IN SEPARATE TERMINAL WHILE SERVER IS RUNNING
-curl -d '{"src":"2811 Einstein Way, Orlando, FL","dest":"4000 Central Florida Blvd, Orlando, FL","stops":["Miami, FL","Tampa, FL","Gainesville, FL"],"times":[3600,7200,10800],"startTime":8400}' -H "Content-Type: application/json" http://127.0.0.1:80/trip
-
 FRONTEND SENDS TO BACKEND IN FOLLOWING FORMAT: 
     src: "2811 Einstein Way, Orlando, FL", //source address
     dest: "4000 Central Florida Blvd, Orlando, FL", //destination address
@@ -29,6 +26,8 @@ DATA SENT TO FRONTEND IN FOLLOWING FORMAT:
 	stopOrder: bestRoute.routes[0].waypoint_order, //array of indicies of stops in order
 	distances: distances, //array of distances between stops (index 0 for src to stop at index 0, index 1 for stop at index 0 to index 1, etc.)
 	arrivalTimes: arrivalTimes //array of arrival times in clock format (index 0 for arrival at stop at index 0, index 1 for arrival at stop at index 1, etc.)
+	totalHours: hrs, //total trip time in hours
+	totalMinutes: min, //total trip time in min after the hours
 	status: "" //status of the request described below
 
 STATUS MESSAGES TO FRONTEND:
@@ -205,6 +204,7 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 	let arrivalSec = [];
 	let arrivalTimes = [];
 	let distances = [];
+	let tripTime = 0;
 
 	if (bestRoute.status != "OK") {
 		//ERROR
@@ -214,6 +214,7 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 	//populate arrays with each leg of the route
 	for (let i = 0; i < bestRoute.routes[0].legs.length; i++) {
 		distances.push(metersToMiles(bestRoute.routes[0].legs[i].distance.value));
+		tripTime += bestRoute.routes[0].legs[i].duration.value;
 
 		//based off of previous arrival time if not the first stop
 		if (i > 0)
@@ -221,6 +222,10 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 		else
 			arrivalSec.push(bestRoute.routes[0].legs[i].duration.value);
 	}
+
+	//updating total trip time
+	for (let i = 0; i < stops.length; i++) 
+		tripTime += times[i];
 
 	//arrival times are adjusted based on start time and converted to clock format
 	for (let i = 0; i < arrivalSec.length; i++) {
@@ -236,6 +241,8 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 		stopOrder: bestRoute.routes[0].waypoint_order,
 		distances: distances,
 		arrivalTimes: arrivalTimes,
+		totalHours: Math.floor(tripTime / 3600),
+		totalMinutes: Math.round(tripTime % 3600 / 60),
 		status: "OK"
 	}
 	
