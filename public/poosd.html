@@ -121,6 +121,10 @@
       margin-bottom: 20px;
       text-align: center;
     }
+
+    #editTrip {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -143,6 +147,7 @@
       <div id="start-time"></div>
       <ul id="outputList"></ul>
       <div id="trip-time"></div>
+      <button id="editTrip" >Edit Trip</button>
     </div>
   </div>
 
@@ -241,12 +246,25 @@
       */
       
         // Remove all input elements
-        let tripinfo = document.getElementsByClassName("trip-info");
-        if (tripinfo !== null) {
-          tripinfo[0].remove()
-        } else {
-          console.error("Element not found");
-        }
+        let tripInfo = document.getElementsByClassName("trip-info");
+        tripInfo[0].style.display = "none";       
+        document.getElementById("editTrip").style.display = "block";
+        
+        document.getElementById('editTrip').addEventListener('click', async function() {
+          // Remove all output elements
+          let tripOutput = document.getElementById("trip-output");
+          tripOutput.innerHTML = "<div id='start-time'></div><ul id='outputList'></ul><div id='trip-time'></div><button id='editTrip' >Edit Trip</button>";
+          document.getElementById("editTrip").style.display = "none";
+
+          let tripInfo = document.getElementsByClassName("trip-info");
+          tripInfo[0].style.display = "block";
+
+          // Add back the input elements
+          
+        });
+
+        let tripOutput = document.getElementById("trip-output");
+        tripOutput.style.display = "block";
 
         // Include trip start time at the top of output
         tripStartTime = document.getElementById("start-time")
@@ -318,6 +336,8 @@
         alert('An error occurred while submitting your trip details.');
       }
     });
+
+    
   </script>
 </body>
 </html>
