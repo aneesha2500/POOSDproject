@@ -28,6 +28,7 @@ DATA SENT TO FRONTEND IN FOLLOWING FORMAT:
 	arrivalTimes: arrivalTimes //array of arrival times in clock format (index 0 for arrival at stop at index 0, index 1 for arrival at stop at index 1, etc.)
 	totalHours: hrs, //total trip time in hours
 	totalMinutes: min, //total trip time in min after the hours
+	mapInfo: bestRoute, //full information from google maps API
 	status: "" //status of the request described below
 
 STATUS MESSAGES TO FRONTEND:
@@ -82,9 +83,9 @@ app.post('/trip', async (req, res) => {
 
 	console.log("received" + req.body);
 
-	let src = req.body.src; //source address
-	let dest = req.body.dest; //destination address
-	let stops = req.body.stops; //array of stop addresses
+	src = req.body.src; //source address
+	dest = req.body.dest; //destination address
+	stops = req.body.stops; //array of stop addresses
 	let times = req.body.times; //array of times at each stop in seconds
 	let startTime = parseFloat(req.body.startTime); //start time seconds into the day
 
@@ -125,7 +126,7 @@ app.post('/trip', async (req, res) => {
 	}
 
 	//process data
-	let data = await receiveRequest(src, dest, stops, times, startTime);
+	let data = await receiveRequest(times, startTime);
 
 	//errors with addresses are handled
 	if (data === "s") {
@@ -153,15 +154,18 @@ app.post('/trip', async (req, res) => {
 		return;
 	}
 
-	console.log(data);
-
 	//send information to frontend
 	res.send(data);
 	return;
 });
 
+let mapsRequest;
+let stops;
+let src;
+let dest;
+
 //API call to google maps that gets the best route
-const getBestRoute = async (src, dest, stops) => {
+const getBestRoute = async () => {
 	const response = await axios.get('https://maps.googleapis.com/maps/api/directions/json', {
 		params: {
 			origin: src, // origin
@@ -188,9 +192,9 @@ const validateAddress = async (address) => {
   }
 
 //processes the data
-async function receiveRequest(src, dest, stops, times, startTime) {
+async function receiveRequest(times, startTime) {
 	//handle address errors
-	let errorCode = await validateAddresses(src, dest, stops);
+	let errorCode = await validateAddresses();
 	if (errorCode != 0) {
 		return errorCode;
 	}
@@ -198,7 +202,15 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 	console.log("no errors");
 
 	//get best route
-	let bestRoute = await getBestRoute(src, dest, stops);
+	let bestRoute = await getBestRoute();
+	mapsRequest = {
+		origin: src, // origin
+		destination: dest, // ending point
+		waypoints: stops,
+		travelMode: "DRIVING",
+		key: apiKey
+	};
+	bestRoute.request = mapsRequest;
 
 	//initializing arrays for travel times in seconds and in string formart, and distances
 	let arrivalSec = [];
@@ -206,6 +218,7 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 	let distances = [];
 	let tripTime = 0;
 
+	console.log(bestRoute.status)
 	if (bestRoute.status != "OK") {
 		//ERROR
 		return "r";
@@ -243,6 +256,7 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 		arrivalTimes: arrivalTimes,
 		totalHours: Math.floor(tripTime / 3600),
 		totalMinutes: Math.round(tripTime % 3600 / 60),
+		mapInfo: bestRoute,
 		status: "OK"
 	}
 	
@@ -251,30 +265,30 @@ async function receiveRequest(src, dest, stops, times, startTime) {
 }
 
 //validates all addresses, and turns them into correct format
-async function validateAddresses(source, destination, stops) {
+async function validateAddresses() {
 	//validates source address
-	if (source == "" || source === undefined) {
+	if (src == "" || src === undefined) {
 		//ERROR
 		return "s";
 	}
-	let sourceCall = await validateAddress(source);
+	let sourceCall = await validateAddress(src);
 	if (sourceCall.status != 'OK') {
 		//ERROR
 		return "s";
 	}
-	source = sourceCall.results[0].formatted_address
+	src = sourceCall.results[0].formatted_address;
 
 	//validates destination address
-	if (destination == "" || destination === undefined) {
+	if (dest == "" || dest === undefined) {
 		//ERROR
 		return "d";
 	}
-	let destinationCall = await validateAddress(destination);
+	let destinationCall = await validateAddress(dest);
 	if (destinationCall.status != 'OK') {
 		//ERROR
 		return "d";
 	}
-	destination = destinationCall.results[0].formatted_address
+	dest = destinationCall.results[0].formatted_address;
 
 	//validates stop addresses
 	for (let i = 0; i < stops.length; i++) {
@@ -287,7 +301,7 @@ async function validateAddresses(source, destination, stops) {
 			//ERROR
 			return i + 1;
 		}
-		stops[i] = stopCall.results[0].formatted_address
+		stops[i] = stopCall.results[0].formatted_address;
 	}
 
 	//no errors

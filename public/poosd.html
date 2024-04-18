@@ -125,6 +125,12 @@
     #editTrip {
       display: none;
     }
+
+    #map {
+      height: 300px;
+      margin-bottom: 20px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -147,13 +153,35 @@
       <div id="start-time"></div>
       <ul id="outputList"></ul>
       <div id="trip-time"></div>
+      <div id="map"></div>
       <button id="editTrip" >Edit Trip</button>
     </div>
   </div>
-
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOHxhGH00oZb9tOht2cmZiYUU-ZB-RXRw&libraries=geometry,places" defer></script>
   <script>
     let numStops = 0;
+    var directionsRenderer;
+    var map;
+    let autocompleteSrc;
+    let autocompleteDest;
+    let autocompleteStops = [];
 
+    //initializes src and dest autocomplete
+    window.onload = function() {
+      autocompleteSrc = new google.maps.places.Autocomplete(document.getElementById('startingLocation'));
+      autocompleteSrc.addListener('place_changed', function() {
+        var place = autocompleteSrc.getPlace();
+        document.getElementById('startingLocation').value = place.formatted_address;
+      });
+
+      autocompleteDest = new google.maps.places.Autocomplete(document.getElementById('destination'));
+      autocompleteDest.addListener('place_changed', function() {
+        var place = autocompleteDest.getPlace();
+        document.getElementById('destination').value = place.formatted_address;
+      });
+    }
+    
+    //adds a stop
     function add() {
       if (numStops >= 19) {
         alert('Maximum number of stops reached.');
@@ -182,8 +210,15 @@
       container.appendChild(stopInputGroup);
 
       container.scrollTop = container.scrollHeight;
+
+      autocompleteStops[numStops - 1] = new google.maps.places.Autocomplete(document.getElementById('stop' + numStops));
+      autocompleteStops[numStops - 1].addListener('place_changed', function() {
+        var place = autocompleteStops[numStops - 1].getPlace();
+        document.getElementById('stop' + numStops).value = place.formatted_address;
+      });
     }
 
+    //removes a stop
     function remove() {
       if (numStops > 0) {
         const container = document.getElementById("stopsContainer");
@@ -193,6 +228,7 @@
       }
     }
 
+    //submits the trip
     document.getElementById('submitTrip').addEventListener('click', async function() {
       const src = document.getElementById('startingLocation').value;
       const dest = document.getElementById('destination').value;
@@ -213,7 +249,7 @@
       }
       console.log(stops);
 
-      // Construct the JSON object
+      //constructs the JSON object
       const tripData = {
         src: src,
         dest: dest,
@@ -222,7 +258,7 @@
         startTime: startTime
       };
 
-      // Send a POST request to /trip
+      //sends a POST request to /trip
       try {
         const response = await fetch('http://127.0.0.1:80/trip', {
           method: 'POST',
@@ -245,28 +281,28 @@
 		    data.arrivalTimes: array of strings representing the arrival times for each leg of travel
       */
       
-        // Remove all input elements
+        //hides input elements
         let tripInfo = document.getElementsByClassName("trip-info");
         tripInfo[0].style.display = "none";       
         document.getElementById("editTrip").style.display = "block";
-        
+        document.getElementById("map").style.display = "block";
+
+        //adds event listener to edit trip button
         document.getElementById('editTrip').addEventListener('click', async function() {
-          // Remove all output elements
+          //removes output elements
           let tripOutput = document.getElementById("trip-output");
-          tripOutput.innerHTML = "<div id='start-time'></div><ul id='outputList'></ul><div id='trip-time'></div><button id='editTrip' >Edit Trip</button>";
+          tripOutput.innerHTML = "<div id='start-time'></div><ul id='outputList'></ul><div id='trip-time'><div id='map'></div></div><button id='editTrip'>Edit Trip</button>";
           document.getElementById("editTrip").style.display = "none";
 
+          //shows input elements
           let tripInfo = document.getElementsByClassName("trip-info");
           tripInfo[0].style.display = "block";
-
-          // Add back the input elements
-          
         });
 
         let tripOutput = document.getElementById("trip-output");
         tripOutput.style.display = "block";
 
-        // Include trip start time at the top of output
+        //includes trip start time at the top of output
         tripStartTime = document.getElementById("start-time")
         var startTimeP = document.createElement('p');
         let period = 'AM';
@@ -283,12 +319,13 @@
         startTimeP.innerText = "Trip start time: " + timeArray[0] + ":" + timeArray[1]  + " " + period;
         tripStartTime.appendChild(startTimeP);
 
-        // Fill in output list with information
+        //fills in output list with information
         let outputList = document.getElementById("outputList");
-        // Start location
+
+        //starting location
         let li = document.createElement('li');
         var address = document.createElement("span");
-        address.innerText = "Starting Location: " + src;
+        address.innerText = "Starting Location: " + data.mapInfo.request.origin;
         li.appendChild(address);
         var eta = document.createElement("span");
         eta.innerText = " ";
@@ -299,11 +336,11 @@
         li.appendChild(distance);
         outputList.appendChild(li);
 
-        // Add in each stop
+        //adds in each stop
         for (i = 0; i < data.stopOrder.length; ++i) {
             let li = document.createElement('li');
             var address = document.createElement("span");
-            address.innerText = "Stop " + (i+1) + ": " + stops[data.stopOrder[i]];
+            address.innerText = "Stop " + (i+1) + ": " + data.mapInfo.request.waypoints[data.stopOrder[i]] + " - stay for " + times[data.stopOrder[i]]/60 + " minutes";
             li.appendChild(address);
             var eta = document.createElement("span");
             eta.innerText = " ETA: " + data.arrivalTimes[i];
@@ -315,29 +352,70 @@
             outputList.appendChild(li);
         }
 
-        // Final Destination
+        //final destination
         li = document.createElement('li');
         var address = document.createElement("span");
-        address.innerText = "Destination: " + dest;
+        address.innerText = "Destination: " + data.mapInfo.request.destination;
         li.appendChild(address);
         var eta = document.createElement("span");
         eta.innerText = " ETA: " + data.arrivalTimes[numStops];
         li.appendChild(eta);
         outputList.appendChild(li);
 
-        // Total Trip Time
+        //total trip time
         tripTime = document.getElementById("trip-time")
         var totalTime = document.createElement('p');
         totalTime.innerText = "Total trip time: " + data.totalHours + " hours and " + data.totalMinutes + " minutes";
         tripTime.appendChild(totalTime);
+
+        //converts data for the map
+        data.mapInfo.routes = data.mapInfo.routes.map((response) => {
+          const bounds = new google.maps.LatLngBounds(
+            response.bounds.southwest,
+            response.bounds.northeast,
+          );
+          response.bounds = bounds;
+          response.overview_path =
+            google.maps.geometry.encoding.decodePath(response.overview_polyline.points);
+          response.legs = response.legs.map((leg) => {
+            leg.start_location =
+              new google.maps.LatLng(leg.start_location.lat, leg.start_location.lng);
+            leg.end_location =
+              new google.maps.LatLng(leg.end_location.lat, leg.end_location.lng);
+            leg.steps = leg.steps.map((step) => {
+              step.path = google.maps.geometry.encoding.decodePath(step.polyline.points);
+              step.start_location = new google.maps.LatLng(
+                step.start_location.lat,
+                step.start_location.lng,
+              );
+              step.end_location = new google.maps.LatLng(
+                step.end_location.lat,
+                step.end_location.lng,
+              );
+              return step;
+            });
+            return leg;
+          });
+          return response;
+        });
+
+        console.log(data.mapInfo)
+
+        //displays the map
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        var mapOptions = {
+          zoom: 1,
+          center: new google.maps.LatLng(0, 0)
+        };
+        map = new google.maps.Map(document.getElementById('map'), mapOptions);
+        directionsRenderer.setMap(map);
+        directionsRenderer.setDirections(data.mapInfo);   
 
       } catch (error) {
         console.error('Error:', error);
         alert('An error occurred while submitting your trip details.');
       }
     });
-
-    
   </script>
 </body>
 </html>
