@@ -13,7 +13,7 @@ const app = express();
 MAKE SURE NODE, EXPRESS, AXIOS, AND CORS ARE INSTALLED IN YOUR DIRECTORY
 
 RUN SERVER IN TERMINAL
-node projectTest.js
+node server.js
 
 FRONTEND SENDS TO BACKEND IN FOLLOWING FORMAT: 
     src: "2811 Einstein Way, Orlando, FL", //source address
