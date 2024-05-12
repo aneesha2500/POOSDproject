@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang = "en">
+  <head>
+    <meta charset = "UTF-8">
+    <meta name = "viewport" content = "width = device-width, initial-scale = 1.0">
+    <title>The Travelling Salesman Problem</title>
+    <link rel = "preconnect" href = "https://fonts.googleapis.com">
+    <link rel = "preconnect" href = "https://fonts.gstatic.com" crossorigin>
+    <link href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display = swap" rel = "stylesheet">
+    <link href = "style.css" rel = "stylesheet" type = "text/css">
+  </head>
+  <body>
+    <div class = "container">
+      <header class = "travellingHeader">
+        <h1>The Travelling Salesman Problem</h1>
+        <p>Plan your route efficiently and with ease. Enter a start time, starting location, up to 20 stops w/ time spent at each stop, a destination, and the travel mode. The fasted order to go to all of the stops will be shown.</p>
+      </header>
+      <div class = "trip-info">
+      <div class = "startTime">
+        <p class = "startTimeLabel">Start time:</p>
+        <input type = "time" id = "startTime" class = "location-input">
+      </div>
+      <input type = "text" id = "startingLocation" placeholder = "Starting Location" class = "location-input">
+      <div id = "stopsContainer"></div>
+      <input type = "text" id = "destination" placeholder = "Destination" class = "location-input">
+      <button class = "add-remove-btn" onclick = "add()">Add Stop</button>
+      <button class = "add-remove-btn" onclick = "remove()">Remove Stop</button>
+      <div class = "routeAvoidance">
+      <div class = "custom-select">
+      <select id = "travelMode">
+        <option value = "0">Travel Mode</option>
+        <option value = "1">Driving</option>
+        <option value = "2">Bicycling</option>
+        <option value = "3">Walking</option>
+      </select>
+      </div>
+      <p class = "switchLabel">Avoid Highways: </p>
+      <label class = "switch">
+        <input type = "checkbox" id = "avoidHighways" class = "check">
+      </label>
+      <p class = "switchLabel">Avoid Tolls: </p>
+      <label class = "switch">
+        <input type = "checkbox" id = "avoidTolls" class = "check">
+      </label>
+      </div>
+      <button id = "submitTrip">Submit Trip</button>
+      </div>
+      <div id = "trip-output">
+        <div id = "start-time"></div>
+        <ul class = "salesmanUL" id = "outputList"></ul>
+        <div id = "trip-time"></div>
+        <div id = "map"></div>
+        <button id = "editTrip" >Edit Trip</button>
+      </div>
+    </div>
+    <script src = "https://maps.googleapis.com/maps/api/js?key=API_KEY_HERE&libraries=geometry,places" defer></script>
+    <script src = "script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,148 @@
+html {
+  min-height: 100%;
+  width: 100%;
+  font-family: 'Roboto', sans-serif;
+  background-image: linear-gradient(to bottom, #8ab0f7, #ced5ff, 70%, #ffffff);
+  align-items: center;
+  text-align: center;
+}
+
+body {
+  height: 100%;
+  margin: 0px;
+  width: 100%;
+  padding-bottom: 10px;
+}
+
+.container {
+  display: inline-block;
+  width: 80%;
+  max-width: 600px;
+  margin: 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 20px;
+  overflow-y: auto; 
+  align-items: center;
+  max-height: 90vh; 
+}
+
+.startTime {
+  display: flex;
+  width: 100%;
+}
+
+.startTimeLabel {
+  padding-top: 4px;
+  width: 74px;
+  padding-right: 10px;
+}
+
+.travellingHeader {
+  text-align: center;
+  width: 100%;
+}
+
+input, button {
+  display: block;
+  width: calc(100% - 20px);
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+#startTime {
+  width: calc(100% - 104px);
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+.location-input, .time-input {
+  background-color: #fffefc;
+  cursor: text;
+}
+
+button.add-remove-btn {
+  width: auto;
+  display: inline-block;
+  padding: 5px 15px;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+#stopsContainer {
+  margin-bottom: 20px;
+}
+
+.stop-input-group {
+  margin-top: 10px;
+}
+
+.salesmanUL {
+  display: block;
+  padding-left: 0px;
+  list-style: none;
+  color:#004d7a;
+}
+
+span {
+  padding-left: 0px;
+  display: inline-block;
+}
+
+#start-time {
+  color: #004d7a;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#trip-time {
+  color: #004d7a;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#editTrip {
+  display: none;
+}
+
+#map {
+  height: 300px;
+  margin-bottom: 20px;
+  display: none;
+}
+
+.buttons {
+  display: inline-block;
+  width: 32.4%;
+  text-align: center;
+}
+
+.check {
+  width: 10px;
+  height: 10px;
+}
+
+.routeAvoidance {
+  display: flex;
+  justify-content: center;
+  font-size: 14px;
+  align-items: center;
+}
+
+.switchLabel {
+  padding: 10px;
+}
